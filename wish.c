@@ -110,23 +110,50 @@ int clean_args(int argc, char*** argv)
 	return 0;
 }
 
+// runs built in commands if applicable
+// returns 1 if a command was run and 0 otherwise
+int run_built_in(int argc, char** argv) 
+{
+	char* command = argv[0];
+	// check if cd command was enetered
+	if (strcmp(command, "cd") == 0)
+	{
+		// print error if incorrect number of arguments
+		if (argc != 2)
+		{
+			fprintf(stderr, "Usage: cd <directory>\n");
+		}
+		else if (chdir(argv[1]) == -1)
+		{
+			fprintf(stderr, "Error changing directory\n");
+		}
+		return 1;
+		
+	}
+	// check if exit command was entered
+	if (strcmp(command, "exit") == 0)
+	{
+		exit(0);
+	}
+	return 0;
+}
+
 // given argument list execute command
 // argv will be modified 
-int process_command(int argc, char*** argv, int pathc, char*** pathv)
+int process_command(int argc, char*** argv, size_t* pathc, char*** pathv)
 {
+	if (run_built_in(argc, *argv))
+	{
+		return 0;
+	}
 	char* command = (*argv)[0];
 	// return if no commands were entered
 	if (argc == 0)
 	{
 		return 0;
 	}
-	// check if exit command was entered
-	if (strcmp(command, "exit") == 0)
-	{
-		return 1;
-	}
 	// look for program in path and execute
-	for (int i = 0; i < pathc; i++)
+	for (int i = 0; i < *pathc; i++)
 	{
 		// append command to ith directory in pathv
 		char* path = malloc(sizeof(char) * (strlen((*pathv)[i]) + strlen(command) + 1));
@@ -194,7 +221,7 @@ int main(int argc, char** argv)
 		}
 
 		const int wish_argc = get_args(lineptr, &wish_argv);
-		const int process_output = process_command(wish_argc, &wish_argv, path_arr_size, &path_arr);
+		const int process_output = process_command(wish_argc, &wish_argv, &path_arr_size, &path_arr);
 		clean_args(wish_argc, &wish_argv);
 
 		if (process_output)
