@@ -15,6 +15,18 @@ int print_error(const char* const error_message)
 	return 0;
 }
 
+// returns length of NULL terminated vector not including NULL pointer
+int getvlen(char** const v)
+{
+	int c = 0;
+	char** p = v;
+	while(*(p++) != NULL)
+	{
+		c++;
+	}
+	return c;
+}
+
 // searches PATH for program and updates fath to program path if found or NULL otherwise
 // path should be unitilized or NULL and should be later freed if not null
 int find_path(const char* const program, char** path)
@@ -208,6 +220,31 @@ int parse_args(int argc, char* const argv[], int* const commandc, char**** const
 	return 0;
 }
 
+/* if valid rediretion is found return 1
+* if invalid redirection is found return -1
+* if no redirection is found return 0 
+* argv should be null terminated */
+int has_redirection(char** const argv)
+{
+	int argc = getvlen(argv);
+	for (int i = 0; i < argc; i++)
+	{
+		if (strcmp(argv[i], ">") == 0)
+		{
+			// '>' token must be the second to last argument and not be the first argument
+			if (i != argc - 2 || i == 0)
+			{
+				return -1;
+			}
+			else
+			{
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
 // creates child processes and execute commands
 // built_in_commands can be passed in parallel but will not run in parallel
 int exec_commands(const int commandc, char*** const commandv)
@@ -235,10 +272,24 @@ int exec_commands(const int commandc, char*** const commandv)
 		// else execute command
 		else
 		{
-			// attempt to run built in command first
-			if (run_built_in(commandv[i]))
-				exit(0);
-			// otherwise find program in path
+			// check for redirection
+			int has_redir = has_redirection(commandv[i]);
+			// if usage is invalid
+			if (has_redir == -1)
+			{
+				print_error("Invalid use of '>'\n");
+				continue;
+			}
+			// if usage is valid then reposition streams and NULL terminate at location of '>'
+			else if (has_redir)
+			{
+				int c = getvlen(commandv[i]);
+				freopen(commandv[i][c - 1], "w+", stdout);
+				freopen(commandv[i][c - 1], "w+", stderr);
+				// truncate commandv[i] at char* to ">"
+				commandv[i][c - 2] = NULL;
+			}
+	
 			// find program
 			char* path = NULL;
 			find_path(commandv[i][0], &path);
