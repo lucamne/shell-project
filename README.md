@@ -1,5 +1,5 @@
 # shell-project
-diy unix shell implementing program execution, parallel processes, and built in commands: "exit", "cd", and "path"
+diy unix shell implementing program execution, parallel processes, file redirection, and built in commands: "exit", "cd", and "path"
 
 ## Installation
 Compile with a c compiler.
@@ -14,3 +14,9 @@ A call to path will overwrite the old path variable so `> path` will remove all 
 ## Parallel Execution
 - Deliminate commands and their arguments with '&' to run them in parallel
 - Built-in functions can be called this way for convenience, but will not be run in parallel
+
+## Redirection
+- Appending a command with ` > file` will redirect standard output and standard error to file
+- If file the file exists, it will be overwritten. If not, it will be created.
+- If executing parallel commands, each command can and must have its own redirection if one is desired.
+- Redirecting the output of multiple parallel commands to the same file results in undefined behavior
